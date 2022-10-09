@@ -1,0 +1,207 @@
+import pandas as pd
+import numpy as np
+
+from sklearn import tree
+from sklearn.linear_model import LogisticRegression 
+from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neural_network import MLPClassifier
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.pipeline import make_pipeline
+from sklearn.base import clone
+
+import matplotlib.pyplot as plt
+
+dataset = pd.read_csv("base unificada.csv", encoding="latin1", delimiter=";")
+dataset.head(10)
+
+dataset.info()
+
+#! pip install https://github.com/pandas-profiling/pandas-profiling/archive/master.zip
+#from pandas_profiling import ProfileReport
+#profile = ProfileReport(dataset, title="EVASAO DATASET")
+#profile.to_notebook_iframe()
+
+dataset["Dif_con_ens_medio_ini_grad"].replace({"Não informado": np.nan}, inplace=True)
+dataset['Dif_con_ens_medio_ini_grad'] = dataset['Dif_con_ens_medio_ini_grad'].astype(np.float64)
+
+dataset['Ano_Conclusao_1_grau'] = dataset['Ano_Conclusao_1_grau'].astype(str)
+dataset["Ano_Conclusao_1_grau"].replace({"nan": np.nan}, inplace=True)
+
+dataset['ANO_CONCLUSAO_2_GRAU'] = dataset['ANO_CONCLUSAO_2_GRAU'].astype(str)
+dataset["ANO_CONCLUSAO_2_GRAU"].replace({"nan": np.nan}, inplace=True)
+
+dataset['MAE_FALECIDA'] = dataset['MAE_FALECIDA'].astype(str)
+dataset["MAE_FALECIDA"].replace({"nan": np.nan}, inplace=True)
+
+dataset['PAI_FALECIDO'] = dataset['PAI_FALECIDO'].astype(str)
+dataset["PAI_FALECIDO"].replace({"nan": np.nan}, inplace=True)
+
+dataset['Periodo'] = dataset['Periodo'].astype(str)
+dataset["Periodo"].replace({"nan": np.nan}, inplace=True)
+
+dataset.info()
+
+from sklearn.impute import SimpleImputer
+
+imp_cat = SimpleImputer(missing_values=np.nan, strategy='constant') #constant or most_frequent
+dataset = pd.DataFrame(imp_cat.fit_transform(dataset), columns=['Ano_Conclusao_1_grau','ANO_CONCLUSAO_2_GRAU','clPeriodo_Let_ini','Coeficiente_Rendimento2','Desc_Area_Procedencia_Escola_Origem','Desc_Cor2','tipo_curso','desc_curso2','Desc_Estado_Civil','Desc_Estado_Civil_Pais','Desc_Forma_Ingresso_Matricula','Desc_renda_familiar','Desc_Renda_Per_Capita','Desc_Tipo_Escola_Origem','Desc_Turno','MAE_FALECIDA','PAI_FALECIDO','Periodo','sexo','Dif_con_ens_medio_ini_grad','ja_possuia_graduacao','ja_possuia_pos_graduacao','Idade2','Situação'])
+
+dataset.info()
+
+print('{}: {}\n'.format('Ano_Conclusao_1_grau', dataset['Ano_Conclusao_1_grau'].unique()))
+print('{}: {}\n'.format('ANO_CONCLUSAO_2_GRAU', dataset['ANO_CONCLUSAO_2_GRAU'].unique()))
+print('{}: {}\n'.format('clPeriodo_Let_ini', dataset['clPeriodo_Let_ini'].unique()))
+print('{}: {}\n'.format('Desc_Area_Procedencia_Escola_Origem', dataset['Desc_Area_Procedencia_Escola_Origem'].unique()))
+print('{}: {}\n'.format('Desc_Cor2', dataset['Desc_Cor2'].unique()))
+print('{}: {}\n'.format('tipo_curso', dataset['tipo_curso'].unique()))
+print('{}: {}\n'.format('desc_curso2', dataset['desc_curso2'].unique()))
+print('{}: {}\n'.format('Desc_Estado_Civil', dataset['Desc_Estado_Civil'].unique()))
+print('{}: {}\n'.format('Desc_Estado_Civil_Pais', dataset['Desc_Estado_Civil_Pais'].unique()))
+print('{}: {}\n'.format('Desc_Forma_Ingresso_Matricula', dataset['Desc_Forma_Ingresso_Matricula'].unique()))
+print('{}: {}\n'.format('Desc_renda_familiar', dataset['Desc_renda_familiar'].unique()))
+print('{}: {}\n'.format('Desc_Renda_Per_Capita', dataset['Desc_Renda_Per_Capita'].unique()))
+print('{}: {}\n'.format('Desc_Tipo_Escola_Origem', dataset['Desc_Tipo_Escola_Origem'].unique()))
+print('{}: {}\n'.format('Desc_Turno', dataset['Desc_Turno'].unique()))
+print('{}: {}\n'.format('MAE_FALECIDA', dataset['MAE_FALECIDA'].unique()))
+print('{}: {}\n'.format('PAI_FALECIDO', dataset['PAI_FALECIDO'].unique()))
+print('{}: {}\n'.format('Periodo', dataset['Periodo'].unique()))
+print('{}: {}\n'.format('sexo', dataset['sexo'].unique()))
+print('{}: {}\n'.format('Dif_con_ens_medio_ini_grad', dataset['Dif_con_ens_medio_ini_grad'].unique()))
+print('{}: {}\n'.format('ja_possuia_graduacao', dataset['ja_possuia_graduacao'].unique()))
+print('{}: {}\n'.format('ja_possuia_pos_graduacao', dataset['ja_possuia_pos_graduacao'].unique()))
+print('{}: {}\n'.format('Idade2', dataset['Idade2'].unique()))
+print('{}: {}\n'.format('Situação', dataset['Situação'].unique()))
+
+dataset['Ano_Conclusao_1_grau'] = dataset['Ano_Conclusao_1_grau'].astype(str)
+dataset['ANO_CONCLUSAO_2_GRAU'] = dataset['ANO_CONCLUSAO_2_GRAU'].astype(str)
+dataset['MAE_FALECIDA'] = dataset['MAE_FALECIDA'].astype(str)
+dataset['PAI_FALECIDO'] = dataset['PAI_FALECIDO'].astype(str)
+dataset['Periodo'] = dataset['Periodo'].astype(str)
+
+dataset['Coeficiente_Rendimento2'] = dataset['Coeficiente_Rendimento2'].astype(np.float64)
+
+dataset["Dif_con_ens_medio_ini_grad"].replace({"missing_value": 0}, inplace=True)
+dataset['Dif_con_ens_medio_ini_grad'] = dataset['Dif_con_ens_medio_ini_grad'].astype(np.int64)
+
+dataset['Idade2'] = dataset['Idade2'].astype(np.int64)
+
+dataset['Situação'] = dataset['Situação'].astype(np.int64)
+
+dataset.info()
+
+print(dataset.nunique())
+
+X = dataset.drop(columns="Situação")
+y = dataset.Situação
+
+X.head()
+
+y # y = 0 => concluinte /  y = 1 => evadido
+
+categorical_features = ['Ano_Conclusao_1_grau','ANO_CONCLUSAO_2_GRAU','clPeriodo_Let_ini','Desc_Area_Procedencia_Escola_Origem','Desc_Cor2','tipo_curso','desc_curso2','Desc_Estado_Civil','Desc_Estado_Civil_Pais','Desc_Forma_Ingresso_Matricula','Desc_renda_familiar','Desc_Renda_Per_Capita','Desc_Tipo_Escola_Origem','Desc_Turno','MAE_FALECIDA','PAI_FALECIDO','Periodo','sexo','ja_possuia_graduacao','ja_possuia_pos_graduacao']
+categorical_transformer = OneHotEncoder(handle_unknown='ignore')
+
+numeric_features = ['Coeficiente_Rendimento2','Dif_con_ens_medio_ini_grad','Idade2']
+numeric_transformer = MinMaxScaler()
+
+preprocessor = ColumnTransformer(
+    transformers = [
+                    #('num', numeric_transformer, numeric_features),  #usar com linearSVC, LogisticRegression, Multilayer Perceptron
+                    ('cat', categorical_transformer, categorical_features)])
+
+from sklearn.preprocessing import FunctionTransformer
+
+#clf = Pipeline(steps=[('preprocessor', preprocessor),
+#                      ('classifier', tree.DecisionTreeClassifier(random_state=1, max_depth=10))])  
+
+#clf = Pipeline(steps=[('preprocessor', preprocessor),
+#                     ('classifier', LinearSVC(random_state = 1))])
+
+clf = Pipeline(steps=[('preprocessor', preprocessor),
+                      ('classifier', LogisticRegression(random_state = 1, max_iter=10000))])
+
+#clf = Pipeline(steps=[('preprocessor', preprocessor),
+#                      ('classifier', RandomForestClassifier(random_state = 1, max_depth=8))])
+
+#clf = Pipeline(steps=[('preprocessor', preprocessor),
+#                      ('classifier', MLPClassifier(random_state = 1))])
+
+#clf = Pipeline(steps=[('preprocessor', preprocessor),
+#                      ('func', FunctionTransformer(lambda x: x.todense(), accept_sparse=True)),
+#                      ('classifier', GaussianNB())])
+
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.ensemble import IsolationForest
+
+strat_cv = StratifiedKFold(n_splits=10, random_state=1, shuffle=True)
+
+avg_acc = 0.0
+avg_f1 = 0.0
+i = 1
+
+f1_train_list = []
+f1_test_list = []
+
+for train_index, test_index in strat_cv.split(X, y):
+
+  print(f"\n--------------------- AVALIAÇÃO {i} ---------------------\n")
+  
+  clf_1 = clone(clf)
+
+  X_train = X.iloc[train_index]
+  y_train = y.iloc[train_index]
+  X_test = X.iloc[test_index]
+  y_test = y.iloc[test_index]
+
+  #print(X_train.shape, y_train.shape)
+  #outlier_detector = Pipeline(steps=[('preprocessor', preprocessor), ('outlier', LocalOutlierFactor())])
+  #outlier_detector = Pipeline(steps=[('preprocessor', preprocessor), ('outlier', IsolationForest(random_state=1))])
+  #yhat = outlier_detector.fit_predict(X_train)
+  #print(yhat)
+  #mask = yhat != -1
+  #X_train, y_train = X_train.iloc[mask, :], y_train.iloc[mask]
+  #print(X_train.shape, y_train.shape)
+
+  clf_1.fit(X_train, y_train)
+  y_pred = clf_1.predict(X_test)
+  y_train_pred = clf_1.predict(X_train)
+  
+  print(metrics.classification_report(y_test,y_pred,digits=3))
+  print(pd.crosstab(y_test, y_pred, rownames=['Real'], colnames=['Predito'], margins=True))
+
+  avg_acc += accuracy_score(y_test,y_pred)
+  prec,rec,f1,supp = precision_recall_fscore_support(y_test, y_pred, average='macro')
+  avg_f1 += f1
+
+  prec_train,rec_train,f1_train,supp_train = precision_recall_fscore_support(y_train, y_train_pred, average='macro')
+
+  f1_train_list.append(f1_train)
+  f1_test_list.append(f1)
+
+  i += 1
+
+print("\n\n---> RESULTADOS DA VALIDAÇÃO CRUZADA COM 10 AVALIAÇÕES:")
+print(f"Acurácia: {avg_acc/10.0:.4f}")
+print(f"F1-score: {avg_f1/10.0:.4f}")
+
+folds = range(1, strat_cv.get_n_splits() + 1)
+plt.figure(figsize=(10, 7))
+plt.plot(folds, f1_train_list, 'o-', color='green', label='train')
+plt.plot(folds, f1_test_list, 'o-', color='blue', label='test')
+plt.legend()
+plt.grid()
+plt.xlabel('Number of fold')
+plt.ylabel('F1')
+plt.show()
